@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, ChevronRight, ChevronDown, Code, Database, FileText, Menu, X, Home, Filter } from "lucide-react";
+import { Search, ChevronRight, ChevronDown, Code, Database, FileText, Menu, X, Home, Filter, Check } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
@@ -7,6 +7,9 @@ import { Badge } from "@/app/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.jpg";
 import type { DocumentationData, DocFile } from "@/types/documentation";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+
 
 export default function Documentation() {
   const navigate = useNavigate();
@@ -18,6 +21,43 @@ export default function Documentation() {
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'backend' | 'frontend' | 'other'>('all');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [copiedPath, setCopiedPath] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<number | null>(null);
+
+  // Copy to clipboard with fallback
+  const copyToClipboard = async (text: string, type: 'path' | 'code', codeIndex?: number) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (type === 'path') {
+        setCopiedPath(true);
+        setTimeout(() => setCopiedPath(false), 2000);
+      } else if (type === 'code' && codeIndex !== undefined) {
+        setCopiedCode(codeIndex);
+        setTimeout(() => setCopiedCode(null), 2000);
+      }
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        if (type === 'path') {
+          setCopiedPath(true);
+          setTimeout(() => setCopiedPath(false), 2000);
+        } else if (type === 'code' && codeIndex !== undefined) {
+          setCopiedCode(codeIndex);
+          setTimeout(() => setCopiedCode(null), 2000);
+        }
+      } catch (e) {
+        console.error('Copy failed:', e);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
 
   // Load documentation data
   useEffect(() => {
@@ -99,6 +139,253 @@ export default function Documentation() {
     }
   };
 
+  // Parse markdown content into structured sections
+  const parseMarkdownContent = (content: string) => {
+    const sections = [];
+    const lines = content.split('\n');
+    let currentSection: any = null;
+    let currentContent: string[] = [];
+    let inCodeBlock = false;
+    let codeBlockContent: string[] = [];
+    let mainTitle = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Check for code blocks
+      if (line.trim().startsWith('```')) {
+        if (!inCodeBlock) {
+          inCodeBlock = true;
+          codeBlockContent = [];
+        } else {
+          inCodeBlock = false;
+          if (currentSection) {
+            currentSection.codeBlocks = currentSection.codeBlocks || [];
+            currentSection.codeBlocks.push(codeBlockContent.join('\n'));
+          }
+          currentContent.push(`___CODE_BLOCK_${currentSection?.codeBlocks?.length - 1}___`);
+        }
+        continue;
+      }
+
+      if (inCodeBlock) {
+        codeBlockContent.push(line);
+        continue;
+      }
+
+      // Check for main title (# )
+      if (line.startsWith('# ') && !line.startsWith('## ')) {
+        mainTitle = line.replace('# ', '').trim();
+        continue;
+      }
+
+      // Check for section heading (##)
+      if (line.startsWith('## ')) {
+        // Skip Overview section
+        const sectionTitle = line.replace('## ', '').trim();
+        if (sectionTitle === 'Overview') {
+          currentSection = null;
+          currentContent = [];
+          continue;
+        }
+        
+        if (currentSection) {
+          currentSection.content = currentContent.join('\n').trim();
+          sections.push(currentSection);
+        }
+        currentSection = {
+          title: sectionTitle,
+          content: '',
+          codeBlocks: []
+        };
+        currentContent = [];
+      } else if (currentSection) {
+        currentContent.push(line);
+      }
+    }
+
+    // Add last section
+    if (currentSection && currentSection.title !== 'Overview') {
+      currentSection.content = currentContent.join('\n').trim();
+      sections.push(currentSection);
+    }
+
+    return sections;
+  };
+
+  const renderFormattedContent = (content: string, codeBlocks: string[] = []) => {
+    const lines = content.split('\n');
+    const elements = [];
+    let currentList: string[] = [];
+    let listType: 'ul' | 'ol' | null = null;
+
+    const flushList = () => {
+      if (currentList.length > 0) {
+        elements.push(
+          <div key={`list-${elements.length}`} className="bg-gradient-to-r from-emerald-50/50 to-transparent rounded-lg p-4 border-l-4 border-emerald-500 my-3">
+            <div className="space-y-2">
+              {currentList.map((item, idx) => (
+                <div key={idx} className="flex items-start gap-3 text-gray-700">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center mt-0.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-600"></div>
+                  </div>
+                  <span className="flex-1 leading-relaxed">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+        currentList = [];
+        listType = null;
+      }
+    };
+
+    lines.forEach((line, idx) => {
+      // Skip any remaining hash symbols
+      if (line.trim().startsWith('#')) {
+        return;
+      }
+
+      // Handle code block placeholders
+      if (line.includes('___CODE_BLOCK_')) {
+        flushList();
+        const match = line.match(/___CODE_BLOCK_(\d+)___/);
+        if (match && codeBlocks[parseInt(match[1])]) {
+          const codeIndex = parseInt(match[1]);
+          elements.push(
+            <div key={`code-${idx}`} className="my-4 group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#024639] to-emerald-900 rounded-xl blur-sm opacity-20"></div>
+                <div className="relative bg-gradient-to-br from-[#024639] to-[#025a48] rounded-xl p-5 shadow-lg border border-emerald-900/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(codeBlocks[codeIndex], 'code', codeIndex)}
+                      className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-md text-xs text-emerald-100 transition-all duration-200 opacity-0 group-hover:opacity-100 flex items-center gap-1.5"
+                    >
+                      {copiedCode === codeIndex ? (
+                        <>
+                          <Check className="w-3 h-3" />
+                          Copied!
+                        </>
+                      ) : (
+                        'Copy Code'
+                      )}
+                    </button>
+                  </div>
+                  <pre className="text-emerald-50 font-mono text-sm overflow-x-auto leading-relaxed">
+                    {codeBlocks[codeIndex]}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          );
+        }
+      }
+      // Handle list items
+      else if (line.trim().startsWith('- ')) {
+        if (listType !== 'ul') {
+          flushList();
+          listType = 'ul';
+        }
+        currentList.push(line.trim().substring(2));
+      }
+      // Handle method signatures (like login(credentials))
+      else if (line.trim() && /^[a-zA-Z_]+\([^)]*\)$/.test(line.trim())) {
+        flushList();
+        elements.push(
+          <div key={`method-${idx}`} className="my-3">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-lg px-4 py-2 shadow-sm">
+              <Code className="w-4 h-4 text-teal-600" />
+              <code className="text-teal-700 text-sm font-mono font-semibold">
+                {line.trim()}
+              </code>
+            </div>
+          </div>
+        );
+      }
+      // Handle bold text (Parameters:, Returns:, Example:)
+      else if (line.trim().match(/^(Parameters|Returns|Example|Summary):/)) {
+        flushList();
+        const label = line.trim();
+        const color = 
+          label.startsWith('Parameters') ? 'from-pink-500 to-rose-500' :
+          label.startsWith('Returns') ? 'from-cyan-500 to-blue-500' :
+          label.startsWith('Example') ? 'from-purple-500 to-indigo-500' :
+          'from-emerald-500 to-teal-500';
+        
+        elements.push(
+          <div key={`label-${idx}`} className="mt-6 mb-3">
+            <div className="inline-flex items-center gap-2">
+              <div className={`w-1 h-6 bg-gradient-to-b ${color} rounded-full`}></div>
+              <h3 className="text-lg font-bold text-gray-900">
+                {label}
+              </h3>
+            </div>
+          </div>
+        );
+      }
+      // Handle **Path**: pattern
+      else if (line.trim().startsWith('**') && line.includes('**:')) {
+        flushList();
+        const pathContent = line.trim().replace('**Path**:', '').trim().replace(/`/g, '');
+        elements.push(
+          <div key={`path-${idx}`} className="my-4">
+            <div className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-lg p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-1">
+                  <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-gray-600" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Path</div>
+                  <code className="text-sm text-gray-800 font-mono break-all">{pathContent}</code>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      // Handle inline code with properties (like credentials.email)
+      else if (line.includes('`')) {
+        flushList();
+        const parts = line.split('`');
+        const rendered = parts.map((part, i) => {
+          if (i % 2 === 1) {
+            return (
+              <code key={i} className="bg-teal-50 text-teal-700 px-2 py-0.5 rounded border border-teal-200 text-sm font-mono font-medium">
+                {part}
+              </code>
+            );
+          }
+          return <span key={i}>{part}</span>;
+        });
+        elements.push(
+          <div key={`inline-${idx}`} className="text-gray-700 leading-relaxed my-2">
+            {rendered}
+          </div>
+        );
+      }
+      // Regular paragraph text
+      else if (line.trim()) {
+        flushList();
+        elements.push(
+          <p key={`text-${idx}`} className="text-gray-700 leading-relaxed my-2">
+            {line}
+          </p>
+        );
+      }
+    });
+
+    flushList();
+    return elements;
+  };
+
   if (!docsData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/20 to-gray-50 flex items-center justify-center">
@@ -112,41 +399,9 @@ export default function Documentation() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/20 to-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-[#024639] via-[#025a49] to-[#024639] shadow-lg px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-4">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-white lg:hidden"
-          >
-            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-          </motion.button>
-          
-          <img src={logo} alt="Logo" className="w-10 h-10 rounded-full" />
-          <div>
-            <h1 className="text-white text-lg sm:text-xl font-bold">API Documentation</h1>
-            <p className="text-emerald-100 text-xs hidden sm:block">
-              {docsData.stats.total} files indexed
-            </p>
-          </div>
-        </div>
+       <Navigation />
+      <div className="flex flex-1 overflow-hidden pt-16">
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/home')}
-            className="bg-white/10 text-white border-white/20 hover:bg-white/20"
-          >
-            <Home className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Home</span>
-          </Button>
-        </div>
-      </header>
-
-      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <AnimatePresence>
           {(sidebarOpen || window.innerWidth >= 1024) && (
@@ -154,7 +409,7 @@ export default function Documentation() {
               initial={{ x: -300 }}
               animate={{ x: 0 }}
               exit={{ x: -300 }}
-              className="w-80 bg-white border-r border-gray-200 flex flex-col overflow-hidden fixed lg:relative h-[calc(100vh-60px)] z-40"
+              className="w-80 bg-white border-r border-gray-200 flex flex-col overflow-hidden fixed lg:relative h-[calc(100vh-64px)] z-40"
             >
               {/* Search */}
               <div className="p-4 border-b border-gray-200 space-y-3">
@@ -303,12 +558,12 @@ export default function Documentation() {
               className="max-w-5xl mx-auto"
             >
               {/* File Header */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                <div className="flex items-start justify-between">
+              <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start gap-3">
                     {getCategoryIcon(selectedFile.category)}
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                      <h1 className="text-3xl font-bold text-gray-900 mb-1">
                         {selectedFile.displayName}
                       </h1>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -320,9 +575,6 @@ export default function Documentation() {
                           </>
                         )}
                       </div>
-                      <div className="mt-2 text-xs font-mono text-gray-500 bg-gray-50 px-2 py-1 rounded inline-block">
-                        {selectedFile.path}
-                      </div>
                     </div>
                   </div>
                   <Badge className={
@@ -333,21 +585,91 @@ export default function Documentation() {
                     {selectedFile.category.toUpperCase()}
                   </Badge>
                 </div>
+                
+                {/* Beautiful Path Highlight */}
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#024639] via-emerald-700 to-[#024639] rounded-xl blur-sm opacity-20"></div>
+                  <div className="relative bg-gradient-to-r from-[#024639] to-emerald-800 rounded-xl p-4 shadow-lg border border-emerald-900/20">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                          <FileText className="w-4 h-4 text-emerald-200" />
+                        </div>
+                      </div>
+                      <code className="text-sm font-mono text-emerald-50 font-medium tracking-wide flex-1 break-all">
+                        {selectedFile.path}
+                      </code>
+                      <button
+                        onClick={() => copyToClipboard(selectedFile.path, 'path')}
+                        className="flex-shrink-0 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium text-emerald-100 transition-all duration-200 hover:shadow-md backdrop-blur-sm flex items-center gap-1.5"
+                      >
+                        {copiedPath ? (
+                          <>
+                            <Check className="w-3 h-3" />
+                            Copied!
+                          </>
+                        ) : (
+                          'Copy'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* File Content */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="space-y-6">
                 {loading ? (
-                  <div className="text-center py-12">
-                    <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading content...</p>
+                  <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+                    <div className="text-center py-12">
+                      <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading content...</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="prose prose-slate max-w-none">
-                    <pre className="whitespace-pre-wrap bg-gray-50 p-4 rounded-lg text-sm overflow-x-auto">
-                      {fileContent}
-                    </pre>
-                  </div>
+                  <>
+                    {parseMarkdownContent(fileContent).map((section, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+                      >
+                        {/* Section Header with Icon */}
+                        <div className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              section.title === 'Summary' ? 'bg-purple-100' :
+                              section.title === 'Classes' ? 'bg-orange-100' :
+                              section.title === 'Function Details' || section.title === 'Methods' ? 'bg-emerald-100' :
+                              section.title === 'Parameters' ? 'bg-pink-100' :
+                              section.title === 'Returns' ? 'bg-cyan-100' :
+                              'bg-gray-100'
+                            }`}>
+                              {section.title === 'Summary' && <FileText className="w-5 h-5 text-purple-600" />}
+                              {section.title === 'Classes' && <Database className="w-5 h-5 text-orange-600" />}
+                              {(section.title === 'Function Details' || section.title === 'Methods') && <Code className="w-5 h-5 text-emerald-600" />}
+                              {section.title === 'Parameters' && <ChevronRight className="w-5 h-5 text-pink-600" />}
+                              {section.title === 'Returns' && <ChevronRight className="w-5 h-5 text-cyan-600" />}
+                              {!['Summary', 'Classes', 'Function Details', 'Methods', 'Parameters', 'Returns'].includes(section.title) && 
+                                <FileText className="w-5 h-5 text-gray-600" />}
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900">
+                              {section.title}
+                            </h2>
+                          </div>
+                        </div>
+                        
+                        {/* Section Content */}
+                        <div className="px-6 py-5">
+                          <div className="space-y-3">
+                            {renderFormattedContent(section.content, section.codeBlocks)}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </>
                 )}
               </div>
             </motion.div>
@@ -364,6 +686,7 @@ export default function Documentation() {
           )}
         </main>
       </div>
+      <Footer />
     </div>
   );
 }

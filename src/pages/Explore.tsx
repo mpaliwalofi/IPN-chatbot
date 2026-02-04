@@ -1,5 +1,9 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+
+
+
+
 import {
   Search,
   ChevronDown,
@@ -106,6 +110,7 @@ export default function Explore() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/20 to-gray-50 flex flex-col">
       <Navigation />
+      <div className="pt-16">
 
       {/* Hero */}
       <section className="pt-24 pb-12 bg-gradient-to-br from-[#024639] via-[#025a49] to-[#024639]">
@@ -379,6 +384,7 @@ export default function Explore() {
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       <Footer />
