@@ -32,8 +32,7 @@ export default function Overview() {
     techStack: [
       { name: "PHP", version: "8.x" },
       { name: "Symfony", version: "6.x" },
-      { name: "Doctrine", version: "2.x" },
-      { name: "API Platform", version: "3.x" },
+     { name: "API Platform", version: "3.x" }
     ]
   };
 
@@ -50,7 +49,6 @@ export default function Overview() {
     ],
     techStack: [
       { name: "Vue.js", version: "3.x" },
-      { name: "Strapi", version: "4.x" },
       { name: "TypeScript", version: "5.x" },
       { name: "Tailwind CSS", version: "3.x" },
     ]

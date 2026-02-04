@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
 import logoImage from "@/assets/logoImage.png";
 
 export default function Navigation() {
@@ -12,95 +11,91 @@ export default function Navigation() {
   const isActive = (path: string) => location.pathname === path;
 
   const navLinks = [
-    { path: "/home", label: "Home" },
-    { path: "/overview", label: "Overview" },
-    { path: "/explore", label: "Explorer" },
-    { path: "/docs", label: "Documentation" },
+    { path: "/home", label: "HOME" },
+    { path: "/overview", label: "OVERVIEW" },
+    { path: "/explore", label: "EXPLORER" },
+    { path: "/docs", label: "DOCUMENTATION" },
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-gradient-to-r from-[#024639] via-[#025a49] to-[#024639] text-white shadow-lg">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <nav className="fixed top-0 w-full z-50 bg-[#004536] text-white shadow">
+      <div className="w-full px-6 lg:px-12">
+
+        <div className="flex items-center justify-between h-20">
+          
           {/* Logo */}
-          <motion.div 
-            className="flex items-center gap-3 cursor-pointer"
-            whileHover={{ scale: 1.02 }}
-            onClick={() => navigate('/home')}
+          <div
+            className="flex items-center cursor-pointer"
+            onClick={() => navigate("/home")}
           >
-            <img 
-              src={logoImage} 
-              alt="Inspired Pet Nutrition" 
-              className="h-10 w-auto object-contain"
+            <img
+              src={logoImage}
+              alt="Inspired Pet Nutrition"
+              className="h-12 w-auto object-contain"
             />
-            <div className="hidden sm:block">
-              <div className="text-sm font-bold">IPN Docs</div>
-              <div className="text-xs text-emerald-200">API Documentation</div>
-            </div>
-          </motion.div>
+          </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-10">
             {navLinks.map((link) => (
-              <motion.button
+              <button
                 key={link.path}
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(link.path)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`text-sm font-semibold tracking-wide transition-colors ${
                   isActive(link.path)
-                    ? "bg-emerald-700 text-white shadow-md"
-                    : "text-emerald-100 hover:text-white hover:bg-emerald-700/50"
+                    ? "text-white"
+                    : "text-emerald-200 hover:text-white"
                 }`}
               >
                 {link.label}
-              </motion.button>
+              </button>
             ))}
+
+            {/* Sign In */}
+            <button className="ml-6 bg-[#0b5d46] hover:bg-[#0e6f54] text-white text-sm font-semibold px-5 py-2 rounded-md transition-colors">
+              SIGN IN
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-emerald-700/50 transition-colors"
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </motion.button>
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2"
+            >
+              {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="md:hidden bg-emerald-800 border-t border-emerald-700 overflow-hidden"
-          >
-            <div className="px-4 py-4 space-y-2">
-              {navLinks.map((link) => (
-                <motion.button
-                  key={link.path}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    navigate(link.path);
-                    setIsMenuOpen(false);
-                  }}
-                  className={`block w-full text-left px-4 py-3 rounded-lg text-base font-medium transition-all ${
-                    isActive(link.path)
-                      ? "bg-emerald-700 text-white"
-                      : "text-emerald-100 hover:text-white hover:bg-emerald-700/50"
-                  }`}
-                >
-                  {link.label}
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isMenuOpen && (
+        <div className="md:hidden bg-[#004536] border-t border-emerald-800">
+          <div className="px-6 py-4 space-y-2">
+            {navLinks.map((link) => (
+              <button
+                key={link.path}
+                onClick={() => {
+                  navigate(link.path);
+                  setIsMenuOpen(false);
+                }}
+                className={`block w-full text-left px-4 py-3 rounded-md text-sm font-semibold transition-colors ${
+                  isActive(link.path)
+                    ? "bg-emerald-800 text-white"
+                    : "text-emerald-200 hover:bg-emerald-800 hover:text-white"
+                }`}
+              >
+                {link.label}
+              </button>
+            ))}
+
+            <button className="w-full mt-3 bg-[#0b5d46] hover:bg-[#0e6f54] text-white py-3 rounded-md text-sm font-semibold">
+              SIGN IN
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

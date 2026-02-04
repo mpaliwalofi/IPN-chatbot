@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+
+
 import { 
   Search, 
   Database, 
@@ -153,7 +157,7 @@ const OverviewSection = () => {
   const repos = [
     { 
       title: "Backend Application", 
-      type: "PHP", 
+      type: "PHP/Symfony", 
       desc: "Core business logic and API endpoints handling data processing.",
       repo: "ultrapremiumdirect/backend",
       icon: <Server size={32} className="text-white" />,
@@ -329,166 +333,16 @@ const HowToUseSection = () => {
 
 
 
-const Footer = () => {
-  return (
-    <footer className="bg-[#004536] text-slate-200">
-      <div className="container mx-auto px-6 py-16">
-        {/* Top Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          
-          {/* Brand */}
-          <div>
-            <h3 className="text-white text-xl font-bold mb-4 flex items-center gap-2">
-              IPN Docs
-            </h3>
-            <p className="text-sm leading-relaxed text-emerald-100">
-              Comprehensive API documentation for Inspired Pet Nutrition&apos;s
-              multi-repository architecture.
-            </p>
 
-            {/* Icons */}
-            <div className="flex gap-3 mt-6">
-              <div className="w-10 h-10 rounded-lg bg-emerald-800 flex items-center justify-center hover:bg-emerald-700 cursor-pointer">
-                🐙
-              </div>
-              <div className="w-10 h-10 rounded-lg bg-emerald-800 flex items-center justify-center hover:bg-emerald-700 cursor-pointer">
-                ✉️
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Navigation</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="/home" className="hover:text-white">Home</a></li>
-              <li><a href="/overview" className="hover:text-white">Overview</a></li>
-              <li><a href="/explore" className="hover:text-white">Explorer</a></li>
-              <li><a href="/docs" className="hover:text-white">Documentation</a></li>
-            </ul>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Resources</h4>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-center gap-2 text-emerald-100">
-                <Code size={14} /> Backend (PHP)
-              </li>
-              <li className="flex items-center gap-2 text-emerald-100">
-                <Zap size={14} /> Frontend (Vue.js)
-              </li>
-              <li className="flex items-center gap-2 text-emerald-100">
-                <Layout size={14} /> CMS (Strapi)
-              </li>
-            </ul>
-          </div>
-
-          {/* Stats */}
-          <div>
-            <h4 className="text-white font-semibold mb-4">Documentation Stats</h4>
-            <ul className="space-y-2 text-sm">
-              <li className="flex justify-between">
-                <span>Total Files</span>
-                <span className="text-white font-semibold">4,516</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Backend</span>
-                <span className="text-emerald-300 font-semibold">1,685</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Frontend</span>
-                <span className="text-blue-300 font-semibold">2,073</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Other</span>
-                <span className="text-slate-300 font-semibold">758</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="border-t border-emerald-800 mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-emerald-200">
-          <span>© 2026 Inspired Pet Nutrition Documentation.</span>
-          <div className="flex gap-6 mt-3 md:mt-0">
-            <a href="#" className="hover:text-white">Privacy Policy</a>
-            <a href="#" className="hover:text-white">Terms of Use</a>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-};
 
 //export default Footer;
 
 
 // Main App Component
 export default function Home() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate(); // Add this
-
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Navigation - UPDATED */}
-      <nav className="fixed top-0 w-full z-50 bg-[#004536]   text-white shadow-md">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <img src={logoImage} alt="Inspired Pet Nutrition" className="h-16 w-auto object-contain" />
-            </div>
-            
-            {/* Desktop Navigation - UPDATED */}
-            <div className="hidden md:flex items-center gap-8">
-              <a href="/home" className="text-sm font-medium text-emerald-100 hover:text-white transition-colors">HOME</a>
-              <a href="/overview" className="text-sm font-medium text-emerald-100 hover:text-white transition-colors">OVERVIEW</a>
-              <a href="/explore" className="text-sm font-medium text-emerald-100 hover:text-white transition-colors">EXPLORER</a>
-              {/* NEW: Documentation Link */}
-              <button 
-                onClick={() => navigate('/docs')}
-                className="text-sm font-medium text-emerald-100 hover:text-white transition-colors"
-              >
-                Documentation
-              </button>
-              <button className="bg-emerald-900 hover:bg-emerald-800 text-white text-sm font-medium py-2 px-4 rounded transition-colors">
-              SIGN IN
-              </button>
-            </div>
-
-            <div className="md:hidden">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-white p-2">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {isMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Mobile Menu - UPDATED */}
-        {isMenuOpen && (
-          <div className="md:hidden bg-emerald-800 border-t border-emerald-700">
-            <div className="px-4 pt-2 pb-4 space-y-1">
-              <a href="/home" className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-emerald-700">Home</a>
-              <a href="/overview" className="block px-3 py-2 rounded-md text-base font-medium text-emerald-100 hover:text-white hover:bg-emerald-700">Overview</a>
-              <a href="/explore" className="block px-3 py-2 rounded-md text-base font-medium text-emerald-100 hover:text-white hover:bg-emerald-700">Explorer</a>
-              {/* NEW: Documentation Link */}
-              <button 
-                onClick={() => navigate('/docs')}
-                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-emerald-100 hover:text-white hover:bg-emerald-700"
-              >
-                Documentation
-              </button>
-            </div>
-          </div>
-        )}
-      </nav>
-
+      <Navigation /> 
       <main>
         <Hero />
         <FeaturesBar />
@@ -501,4 +355,5 @@ export default function Home() {
     </div>
   );
 }
+
 // export default Home;
