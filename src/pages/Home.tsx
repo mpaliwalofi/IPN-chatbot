@@ -28,7 +28,7 @@ const Hero = () => {
   const navigate = useNavigate(); // Add this hook
 
   return (
-    <section className="pt-24 pb-16 bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-900 text-white">
+    <section className="pt-24 pb-16 bg-[#F9FAFB] via-emerald-800 to-emerald-900 text-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           <motion.div 
@@ -37,27 +37,60 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-              Comprehensive API Documentation
-            </h1>
-            <p className="text-xl sm:text-2xl text-emerald-100 mb-8 max-w-2xl mx-auto lg:mx-0">
-              Explore 4,500+ auto-generated documentation files from our Backend, Frontend, and CMS repositories.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              {/* UPDATED: Navigate to Documentation page */}
-              <button 
-                onClick={() => navigate('/docs')}
-                className="bg-white text-emerald-900 hover:bg-emerald-50 font-bold py-3 px-8 rounded-lg text-lg shadow-lg transition-all transform hover:scale-105"
-              >
-                Browse Documentation
-              </button>
-              <button 
-                onClick={() => navigate('/overview')}
-                className="bg-emerald-700 hover:bg-emerald-600 text-white font-medium py-3 px-8 rounded-lg text-lg transition-colors"
-              >
-                View Overview
-              </button>
-            </div>
+              <h1 className="font-roboto text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+    <span className="text-black">Legacy Documentation </span>
+    <span className="text-[#004525]">Explorer</span>
+  </h1>
+
+            <p className="text-sm sm:text-base text-black mb-6 max-w-2xl mx-auto lg:mx-0">
+  Explore 4,500+ auto-generated documentation files from our Backend, Frontend, and CMS repositories.
+</p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-8">
+
+  {/* Primary CTA */}
+  <button
+    onClick={() => navigate('/docs')}
+    className="
+      bg-[#004536] 
+      hover:bg-[#063f33]
+      text-white 
+      font-semibold 
+      py-3 px-8 
+      rounded-xl 
+      text-base
+      shadow-md 
+      hover:shadow-lg
+      transition-all
+      duration-200
+    "
+  >
+    Browse Documentation
+  </button>
+
+  {/* Secondary CTA */}
+  <button
+    onClick={() => navigate('/overview')}
+    className="
+      bg-white 
+      text-[#004536]
+      border border-[#004536]
+      hover:bg-[#004536]
+      hover:text-white
+      font-semibold
+      py-3 px-8 
+      rounded-xl 
+      text-base
+      shadow-sm
+      hover:shadow-md
+      transition-all
+      duration-200
+    "
+  >
+    View Overview
+  </button>
+</div>
+
           </motion.div>
           
           <motion.div 
@@ -120,7 +153,7 @@ const OverviewSection = () => {
   const repos = [
     { 
       title: "Backend Application", 
-      type: "PHP/Symfony", 
+      type: "PHP", 
       desc: "Core business logic and API endpoints handling data processing.",
       repo: "ultrapremiumdirect/backend",
       icon: <Server size={32} className="text-white" />,
@@ -128,7 +161,7 @@ const OverviewSection = () => {
     },
     { 
       title: "Frontend Application", 
-      type: "JavaScript/Vue.js", 
+      type: "JavaScript/JSON/TypeScript", 
       desc: "Client-side application providing the user interface and interactions.",
       repo: "ultrapremiumdirect/frontend",
       icon: <Monitor size={32} className="text-white" />,
@@ -230,6 +263,7 @@ const CategoriesSection = () => {
 
 // How To Use Section
 const HowToUseSection = () => {
+  const navigate = useNavigate();
   return (
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -260,9 +294,13 @@ const HowToUseSection = () => {
               </div>
             </div>
             <div className="mt-10">
-               <button className="bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-8 rounded-lg transition-colors">
-                Start Exploring
-              </button>
+              <button
+  onClick={() => navigate('/explore')}
+  className="bg-[#004536] hover:bg-slate-800 text-white font-medium py-3 px-8 rounded-lg transition-colors"
+>
+  Start Exploring
+</button>
+
             </div>
           </div>
           <div className="flex-1 bg-slate-50 p-8 rounded-2xl border border-slate-200">
@@ -289,52 +327,102 @@ const HowToUseSection = () => {
   );
 };
 
-// Footer / Generation Info
+
+
 const Footer = () => {
   return (
-    <footer className="bg-slate-900 text-slate-300 py-16">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+    <footer className="bg-[#004536] text-slate-200">
+      <div className="container mx-auto px-6 py-16">
+        {/* Top Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          
+          {/* Brand */}
           <div>
-            <h3 className="text-white text-lg font-bold mb-4">LegacyDocs</h3>
-            <p className="text-sm leading-relaxed text-slate-400">
-              Automated documentation system for legacy enterprise applications. Preserving knowledge through code analysis.
+            <h3 className="text-white text-xl font-bold mb-4 flex items-center gap-2">
+              IPN Docs
+            </h3>
+            <p className="text-sm leading-relaxed text-emerald-100">
+              Comprehensive API documentation for Inspired Pet Nutrition&apos;s
+              multi-repository architecture.
             </p>
+
+            {/* Icons */}
+            <div className="flex gap-3 mt-6">
+              <div className="w-10 h-10 rounded-lg bg-emerald-800 flex items-center justify-center hover:bg-emerald-700 cursor-pointer">
+                🐙
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-emerald-800 flex items-center justify-center hover:bg-emerald-700 cursor-pointer">
+                ✉️
+              </div>
+            </div>
           </div>
+
+          {/* Navigation */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Quick Links</h4>
+            <h4 className="text-white font-semibold mb-4">Navigation</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="/home" className="hover:text-emerald-400 transition-colors">Home</a></li>
-              <li><a href="/overview" className="hover:text-emerald-400 transition-colors">Overview</a></li>
-              <li><a href="/explore" className="hover:text-emerald-400 transition-colors">Explorer</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Search</a></li>
+              <li><a href="/home" className="hover:text-white">Home</a></li>
+              <li><a href="/overview" className="hover:text-white">Overview</a></li>
+              <li><a href="/explore" className="hover:text-white">Explorer</a></li>
+              <li><a href="/docs" className="hover:text-white">Documentation</a></li>
             </ul>
           </div>
+
+          {/* Resources */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Generation Tech</h4>
+            <h4 className="text-white font-semibold mb-4">Resources</h4>
             <ul className="space-y-2 text-sm">
-              <li className="flex items-center gap-2"><Code size={14} /> Multi-language Parsers</li>
-              <li className="flex items-center gap-2"><Zap size={14} /> Claude Sonnet 4.5 AI</li>
-              <li className="flex items-center gap-2"><Terminal size={14} /> Python Generator</li>
-              <li className="flex items-center gap-2"><Layout size={14} /> MkDocs Material</li>
+              <li className="flex items-center gap-2 text-emerald-100">
+                <Code size={14} /> Backend (PHP)
+              </li>
+              <li className="flex items-center gap-2 text-emerald-100">
+                <Zap size={14} /> Frontend (Vue.js)
+              </li>
+              <li className="flex items-center gap-2 text-emerald-100">
+                <Layout size={14} /> CMS (Strapi)
+              </li>
             </ul>
           </div>
+
+          {/* Stats */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Legal</h4>
+            <h4 className="text-white font-semibold mb-4">Documentation Stats</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Terms of Use</a></li>
-              <li><span className="text-slate-500">© 2026 LegacyDocs</span></li>
+              <li className="flex justify-between">
+                <span>Total Files</span>
+                <span className="text-white font-semibold">4,516</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Backend</span>
+                <span className="text-emerald-300 font-semibold">1,685</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Frontend</span>
+                <span className="text-blue-300 font-semibold">2,073</span>
+              </li>
+              <li className="flex justify-between">
+                <span>Other</span>
+                <span className="text-slate-300 font-semibold">758</span>
+              </li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-slate-800 pt-8 text-center text-xs text-slate-500">
-          Generated on Monday, February 2, 2026
+
+        {/* Bottom Bar */}
+        <div className="border-t border-emerald-800 mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-emerald-200">
+          <span>© 2026 Inspired Pet Nutrition Documentation.</span>
+          <div className="flex gap-6 mt-3 md:mt-0">
+            <a href="#" className="hover:text-white">Privacy Policy</a>
+            <a href="#" className="hover:text-white">Terms of Use</a>
+          </div>
         </div>
       </div>
     </footer>
   );
 };
+
+//export default Footer;
+
 
 // Main App Component
 export default function Home() {
@@ -344,18 +432,18 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       {/* Navigation - UPDATED */}
-      <nav className="fixed top-0 w-full z-50 bg-emerald-900 text-white shadow-md">
+      <nav className="fixed top-0 w-full z-50 bg-[#004536]   text-white shadow-md">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <img src={logoImage} alt="Inspired Pet Nutrition" className="h-10 w-auto object-contain" />
+              <img src={logoImage} alt="Inspired Pet Nutrition" className="h-16 w-auto object-contain" />
             </div>
             
             {/* Desktop Navigation - UPDATED */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="/home" className="text-sm font-medium text-emerald-100 hover:text-white transition-colors">Home</a>
-              <a href="/overview" className="text-sm font-medium text-emerald-100 hover:text-white transition-colors">Overview</a>
-              <a href="/explore" className="text-sm font-medium text-emerald-100 hover:text-white transition-colors">Explorer</a>
+              <a href="/home" className="text-sm font-medium text-emerald-100 hover:text-white transition-colors">HOME</a>
+              <a href="/overview" className="text-sm font-medium text-emerald-100 hover:text-white transition-colors">OVERVIEW</a>
+              <a href="/explore" className="text-sm font-medium text-emerald-100 hover:text-white transition-colors">EXPLORER</a>
               {/* NEW: Documentation Link */}
               <button 
                 onClick={() => navigate('/docs')}
@@ -363,8 +451,8 @@ export default function Home() {
               >
                 Documentation
               </button>
-              <button className="bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium py-2 px-4 rounded transition-colors">
-                Sign In
+              <button className="bg-emerald-900 hover:bg-emerald-800 text-white text-sm font-medium py-2 px-4 rounded transition-colors">
+              SIGN IN
               </button>
             </div>
 

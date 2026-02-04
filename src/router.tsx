@@ -5,7 +5,7 @@ import Home from "@/pages/Home";
 import Explore from "@/pages/Explore";
 import Overview from "@/pages/Overview";
 import Documentation from "@/pages/Documentation";
-
+// checking 
 export const router = createBrowserRouter([
   { path: "/", element: <Login /> },
   { path: "/home", element: <Home /> },
