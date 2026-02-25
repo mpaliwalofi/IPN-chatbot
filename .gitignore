@@ -53,3 +53,13 @@ lerna-debug.log*
 
 # Vite
 .vite
+
+# Python virtual environment
+.venv/
+venv/
+env/
+RAG/.venv/
+
+# Python cache
+__pycache__/
+*.pyc
