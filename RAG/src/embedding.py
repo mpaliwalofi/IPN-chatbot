@@ -1,30 +1,35 @@
-from typing import List, Any
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer
+﻿import os
+import time
 import numpy as np
-from src.data_loader import load_all_documents
+from google import genai
+from dotenv import load_dotenv
 
-class EmbeddingPipeline:
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2", chunk_size: int = 1000, chunk_overlap: int = 200):
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
-        self.model = SentenceTransformer(model_name)
-        print(f"[INFO] Loaded embedding model: {model_name}")
+load_dotenv()
 
-    def chunk_documents(self, documents: List[Any]) -> List[Any]:
-        splitter = RecursiveCharacterTextSplitter(
-            chunk_size=self.chunk_size,
-            chunk_overlap=self.chunk_overlap,
-            length_function=len,
-            separators=["\n\n", "\n", " ", ""]
-        )
-        chunks = splitter.split_documents(documents)
-        print(f"[INFO] Split {len(documents)} documents into {len(chunks)} chunks.")
-        return chunks
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
-    def embed_chunks(self, chunks: List[Any]) -> np.ndarray:
-        texts = [chunk.page_content for chunk in chunks]
-        print(f"[INFO] Generating embeddings for {len(texts)} chunks...")
-        embeddings = self.model.encode(texts, show_progress_bar=True)
-        print(f"[INFO] Embeddings shape: {embeddings.shape}")
-        return embeddings
+def get_embedding(text: str) -> np.ndarray:
+    while True:
+        try:
+            response = client.models.embed_content(
+                model="gemini-embedding-001",
+                contents=text
+            )
+            return np.array(response.embeddings[0].values, dtype="float32")
+        except Exception as e:
+            err = str(e)
+            if "429" in err or "RESOURCE_EXHAUSTED" in err:
+                print(f"[RATE LIMIT] Quota hit. Waiting 60s before retrying...")
+                time.sleep(60)
+            else:
+                raise
+
+def get_embeddings_batch(texts: list) -> np.ndarray:
+    vectors = []
+    for i, text in enumerate(texts):
+        vec = get_embedding(text)
+        vectors.append(vec)
+        time.sleep(0.65)
+        if (i + 1) % 10 == 0:
+            print(f"[INFO] Embedded {i + 1}/{len(texts)} chunks...")
+    return np.array(vectors, dtype="float32")

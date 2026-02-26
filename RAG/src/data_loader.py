@@ -6,10 +6,6 @@ from langchain_community.document_loaders.excel import UnstructuredExcelLoader
 from langchain_community.document_loaders import JSONLoader
 
 def load_all_documents(data_dir: str) -> List[Any]:
-    """
-    Load all supported files from the data directory and convert to LangChain document structure.
-    Supported: PDF, TXT, CSV, Excel, Word, JSON
-    """
     # Use project root data folder
     data_path = Path(data_dir).resolve()
     print(f"[DEBUG] Data path: {data_path}")
@@ -53,6 +49,19 @@ def load_all_documents(data_dir: str) -> List[Any]:
             documents.extend(loaded)
         except Exception as e:
             print(f"[ERROR] Failed to load CSV {csv_file}: {e}")
+            
+    # MD files        
+    md_files = list(data_path.glob('**/*.md'))
+    print(f"[DEBUG] Found {len(md_files)} MD files: {[str(f) for f in md_files]}")
+    for md_file in md_files:
+        print(f"[DEBUG] Loading MD: {md_file}")
+        try:
+            loader = TextLoader(str(md_file))
+            loaded = loader.load()
+            print(f"[DEBUG] Loaded {len(loaded)} MD docs from {md_file}")
+            documents.extend(loaded)
+        except Exception as e:
+            print(f"[ERROR] Failed to load MD {md_file}: {e}")
 
     # Excel files
     xlsx_files = list(data_path.glob('**/*.xlsx'))
