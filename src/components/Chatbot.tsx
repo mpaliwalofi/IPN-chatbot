@@ -12,10 +12,22 @@ interface Source {
   relevance_score: number;
 }
 
+interface ValidationMetrics {
+  faithfulness: number;
+  relevance: number;
+  coherence: number;
+  hallucination: number;
+  toxicity: number;
+  completeness: number;
+  overall_quality: number;
+}
+
 interface MessageMetadata {
   retrieved_chunks?: number;
   used_context?: boolean;
   processing_time_ms?: number;
+  is_overview?: boolean;
+  validation?: ValidationMetrics;
 }
 
 interface Message {
@@ -77,6 +89,125 @@ const getCategoryLabel = (category: string): string => {
     default:
       return 'Documentation';
   }
+};
+
+// ============================================================================
+// Validation Metrics Component
+// ============================================================================
+
+const ValidationMetricsBadge: React.FC<{ metrics: ValidationMetrics }> = ({ metrics }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const getScoreColor = (score: number): string => {
+    if (score >= 0.8) return '#22c55e'; // green
+    if (score >= 0.6) return '#f59e0b'; // yellow
+    return '#ef4444'; // red
+  };
+  
+  const getScoreIcon = (score: number): string => {
+    if (score >= 0.8) return '✓';
+    if (score >= 0.6) return '~';
+    return '!';
+  };
+  
+  const overall = metrics.overall_quality || 0;
+  
+  return (
+    <div className="sia-validation-badge">
+      <button 
+        className="sia-validation-badge__toggle"
+        onClick={() => setIsExpanded(!isExpanded)}
+        style={{ 
+          borderLeft: `3px solid ${getScoreColor(overall)}`,
+        }}
+      >
+        <span className="sia-validation-badge__icon" style={{ color: getScoreColor(overall) }}>
+          {getScoreIcon(overall)}
+        </span>
+        <span className="sia-validation-badge__label">Quality Score</span>
+        <span className="sia-validation-badge__score" style={{ color: getScoreColor(overall) }}>
+          {Math.round(overall * 100)}%
+        </span>
+        <span className={`sia-validation-badge__arrow ${isExpanded ? 'expanded' : ''}`}>▼</span>
+      </button>
+      
+      {isExpanded && (
+        <div className="sia-validation-badge__details">
+          <div className="sia-validation-badge__grid">
+            <div className="sia-validation-badge__item">
+              <span className="sia-validation-badge__metric-name">Faithfulness</span>
+              <div className="sia-validation-badge__bar">
+                <div 
+                  className="sia-validation-badge__bar-fill" 
+                  style={{ width: `${(metrics.faithfulness || 0) * 100}%`, background: getScoreColor(metrics.faithfulness || 0) }}
+                />
+              </div>
+              <span className="sia-validation-badge__metric-value">{Math.round((metrics.faithfulness || 0) * 100)}%</span>
+            </div>
+            
+            <div className="sia-validation-badge__item">
+              <span className="sia-validation-badge__metric-name">Relevance</span>
+              <div className="sia-validation-badge__bar">
+                <div 
+                  className="sia-validation-badge__bar-fill" 
+                  style={{ width: `${(metrics.relevance || 0) * 100}%`, background: getScoreColor(metrics.relevance || 0) }}
+                />
+              </div>
+              <span className="sia-validation-badge__metric-value">{Math.round((metrics.relevance || 0) * 100)}%</span>
+            </div>
+            
+            <div className="sia-validation-badge__item">
+              <span className="sia-validation-badge__metric-name">Coherence</span>
+              <div className="sia-validation-badge__bar">
+                <div 
+                  className="sia-validation-badge__bar-fill" 
+                  style={{ width: `${(metrics.coherence || 0) * 100}%`, background: getScoreColor(metrics.coherence || 0) }}
+                />
+              </div>
+              <span className="sia-validation-badge__metric-value">{Math.round((metrics.coherence || 0) * 100)}%</span>
+            </div>
+            
+            <div className="sia-validation-badge__item">
+              <span className="sia-validation-badge__metric-name">No Hallucination</span>
+              <div className="sia-validation-badge__bar">
+                <div 
+                  className="sia-validation-badge__bar-fill" 
+                  style={{ width: `${(metrics.hallucination || 0) * 100}%`, background: getScoreColor(metrics.hallucination || 0) }}
+                />
+              </div>
+              <span className="sia-validation-badge__metric-value">{Math.round((metrics.hallucination || 0) * 100)}%</span>
+            </div>
+            
+            <div className="sia-validation-badge__item">
+              <span className="sia-validation-badge__metric-name">Safety</span>
+              <div className="sia-validation-badge__bar">
+                <div 
+                  className="sia-validation-badge__bar-fill" 
+                  style={{ width: `${(1 - (metrics.toxicity || 0)) * 100}%`, background: getScoreColor(1 - (metrics.toxicity || 0)) }}
+                />
+              </div>
+              <span className="sia-validation-badge__metric-value">{Math.round((1 - (metrics.toxicity || 0)) * 100)}%</span>
+            </div>
+            
+            <div className="sia-validation-badge__item">
+              <span className="sia-validation-badge__metric-name">Completeness</span>
+              <div className="sia-validation-badge__bar">
+                <div 
+                  className="sia-validation-badge__bar-fill" 
+                  style={{ width: `${(metrics.completeness || 0) * 100}%`, background: getScoreColor(metrics.completeness || 0) }}
+                />
+              </div>
+              <span className="sia-validation-badge__metric-value">{Math.round((metrics.completeness || 0) * 100)}%</span>
+            </div>
+          </div>
+          
+          <div className="sia-validation-badge__footer">
+            <small>AI-generated content quality metrics</small>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 // ============================================================================
@@ -176,6 +307,11 @@ const MessageContent: React.FC<{ message: Message }> = ({ message }) => {
           )}
         </div>
       )}
+      
+      {/* Validation Metrics */}
+      {message.metadata?.validation && (
+        <ValidationMetricsBadge metrics={message.metadata.validation} />
+      )}
     </div>
   );
 };
@@ -206,7 +342,9 @@ const Chatbot: React.FC = () => {
   // Quick suggestion options
   const suggestions = [
     'How does the subscription system work?',
-    'Explain the animal entity structure',
+    'Give me an overview of IPN codebase',
+    'How many controllers are there?',
+    'List all entities',
     'Show cart components',
     'API authentication flow',
   ];

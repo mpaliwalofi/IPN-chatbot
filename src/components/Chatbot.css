@@ -830,6 +830,126 @@
   }
 }
 
+/* ── Validation Metrics Badge ───────────── */
+
+.sia-validation-badge {
+  border-top: 1px dashed var(--sia-border);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.sia-validation-badge__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--sia-bg);
+  border: 1px solid var(--sia-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.sia-validation-badge__toggle:hover {
+  background: rgba(14, 90, 74, 0.06);
+}
+
+.sia-validation-badge__icon {
+  font-size: 14px;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.8);
+  border-radius: 50%;
+}
+
+.sia-validation-badge__label {
+  flex: 1;
+  color: var(--sia-text-muted);
+  font-weight: 500;
+}
+
+.sia-validation-badge__score {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.sia-validation-badge__arrow {
+  font-size: 10px;
+  color: var(--sia-text-muted);
+  transition: transform 0.2s;
+}
+
+.sia-validation-badge__arrow.expanded {
+  transform: rotate(180deg);
+}
+
+.sia-validation-badge__details {
+  padding: 12px;
+  background: var(--sia-bg);
+  border: 1px solid var(--sia-border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  margin-top: -4px;
+}
+
+.sia-validation-badge__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.sia-validation-badge__item {
+  display: grid;
+  grid-template-columns: 100px 1fr 35px;
+  align-items: center;
+  gap: 8px;
+}
+
+.sia-validation-badge__metric-name {
+  font-size: 11px;
+  color: var(--sia-text-muted);
+  font-weight: 500;
+}
+
+.sia-validation-badge__bar {
+  height: 6px;
+  background: rgba(14, 90, 74, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sia-validation-badge__bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.sia-validation-badge__metric-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sia-text);
+  text-align: right;
+}
+
+.sia-validation-badge__footer {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--sia-border);
+  text-align: center;
+}
+
+.sia-validation-badge__footer small {
+  font-size: 10px;
+  color: var(--sia-text-muted);
+}
+
 /* ── Animations ─────────────────────────── */
 
 @keyframes fadeIn {

@@ -208,7 +208,7 @@ def chat():
             )
         
         # Non-streaming response
-        result = rag_engine.generate_response(user_message, messages)
+        result = rag_engine.generate_response(user_message, messages, validate_output=True)
         
         # Format sources for frontend
         sources = []
@@ -220,18 +220,29 @@ def chat():
                 'relevance_score': round(source.get('score', 0), 3)
             })
         
+        # Build metadata - only include validation for non-casual responses
+        metadata = {
+            'retrieved_chunks': result.get('retrieved_chunks', 0),
+            'used_context': result.get('used_context', False),
+            'is_casual': result.get('is_casual', False),
+            'is_overview': result.get('is_overview', False),
+            'processing_time_ms': result.get('processing_time_ms', 0)
+        }
+        
+        # Only add validation metrics for non-casual responses
+        if not result.get('is_casual', False) and 'validation_metrics' in result:
+            metadata['validation'] = result['validation_metrics']
+            vm = result['validation_metrics']
+            quality = vm.get('overall_quality', 0)
+            logger.info(f"Response quality: {quality:.2f} | Faithfulness: {vm.get('faithfulness', 0):.2f}")
+        
         response_data = {
             'response': result['response'],
             'sources': sources,
-            'metadata': {
-                'retrieved_chunks': result.get('retrieved_chunks', 0),
-                'used_context': result.get('used_context', False),
-                'is_casual': result.get('is_casual', False),
-                'processing_time_ms': result.get('processing_time_ms', 0)
-            }
+            'metadata': metadata
         }
         
-        logger.info(f"Response generated | Sources: {len(sources)} | Context used: {result.get('used_context', False)}")
+        logger.info(f"Response generated | Sources: {len(sources)} | Context used: {result.get('used_context', False)} | Casual: {result.get('is_casual', False)}")
         
         return jsonify(response_data)
         
@@ -350,6 +361,100 @@ def rebuild_index():
         
     except Exception as e:
         logger.error(f"Rebuild index error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/validate', methods=['POST'])
+@rate_limit
+def validate_response():
+    """
+    Validate a response for quality metrics
+    
+    Request body:
+    {
+        "query": "original query",
+        "response": "response to validate",
+        "context": "retrieved context (optional)"
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+        
+        query = data.get('query', '').strip()
+        response_text = data.get('response', '').strip()
+        context = data.get('context', '')
+        
+        if not query or not response_text:
+            return jsonify({'error': 'Query and response are required'}), 400
+        
+        # Run validation
+        from src.output_validator import OutputValidator
+        validator = OutputValidator()
+        
+        metrics = validator.validate(
+            query=query,
+            response=response_text,
+            context=context,
+            sources=[]
+        )
+        
+        return jsonify({
+            'metrics': metrics.to_dict(),
+            'is_valid': metrics.is_valid(),
+            'assessment': 'high_quality' if metrics.overall_score() > 0.8 else 
+                         'acceptable' if metrics.is_valid() else 'needs_improvement'
+        })
+        
+    except Exception as e:
+        logger.error(f"Validation error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/overview', methods=['GET'])
+def get_overview():
+    """Get IPN codebase overview and statistics"""
+    try:
+        stats = rag_engine.doc_analyzer.analyze()
+        
+        return jsonify({
+            'codebase': {
+                'total_documents': stats.total_documents,
+                'backend_files': stats.backend_files,
+                'frontend_files': stats.frontend_files,
+                'other_files': stats.other_files,
+            },
+            'architecture': {
+                'controllers': {
+                    'count': stats.total_controllers,
+                    'sample': stats.controllers[:10]
+                },
+                'entities': {
+                    'count': stats.total_entities,
+                    'sample': stats.entities[:10]
+                },
+                'services': {
+                    'count': stats.total_services,
+                    'sample': stats.services[:10]
+                },
+                'repositories': stats.total_repositories,
+                'components': stats.total_components,
+                'composables': stats.total_composables
+            },
+            'description': {
+                'short': 'IPN is a pet nutrition e-commerce platform built with Symfony and Vue.js',
+                'tech_stack': {
+                    'backend': 'PHP/Symfony/API Platform',
+                    'frontend': 'Vue.js/Nuxt/TypeScript',
+                    'cms': 'Strapi'
+                }
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Overview error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 

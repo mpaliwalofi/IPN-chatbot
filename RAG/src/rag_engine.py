@@ -21,6 +21,8 @@ except ImportError:
 
 from src.vectorstore import FaissVectorStore
 from src.document_processor import DocumentProcessor
+from src.document_analyzer import DocumentAnalyzer
+from src.output_validator import OutputValidator, ValidationMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +97,12 @@ class RAGEngine:
         
         # Initialize document processor
         self.doc_processor = DocumentProcessor()
+        
+        # Initialize document analyzer for overview questions
+        self.doc_analyzer = DocumentAnalyzer(docs_path)
+        
+        # Initialize output validator
+        self.output_validator = OutputValidator(embedding_model)
         
         # System prompt optimized for IPN documentation
         self.system_prompt = """You are SIA (Smart IPN Assistant), an expert technical documentation assistant for IPN (Inspired Pet Nutrition).
@@ -319,10 +327,16 @@ Remember: You represent IPN's technical team. Be helpful, accurate, and professi
     def generate_response(
         self, 
         query: str, 
-        chat_history: List[ChatMessage] = None
+        chat_history: List[ChatMessage] = None,
+        validate_output: bool = True
     ) -> Dict[str, Any]:
         """
         Generate a response using RAG
+        
+        Args:
+            query: User query
+            chat_history: Previous conversation history
+            validate_output: Whether to run output validation
         
         Returns dict with:
         - response: The generated text
@@ -331,21 +345,50 @@ Remember: You represent IPN's technical team. Be helpful, accurate, and professi
         - used_context: Whether context was used
         - is_casual: Whether this was a casual query
         - processing_time_ms: Processing time in milliseconds
+        - validation_metrics: Quality metrics (if validate_output=True)
         """
         start_time = time.time()
         chat_history = chat_history or []
+        
+        # Check for overview/statistics questions first
+        overview_response = self.doc_analyzer.get_response(query)
+        if overview_response:
+            processing_time = int((time.time() - start_time) * 1000)
+            result = {
+                'response': overview_response,
+                'sources': [],
+                'retrieved_chunks': 0,
+                'used_context': False,
+                'is_casual': False,
+                'is_overview': True,
+                'processing_time_ms': processing_time
+            }
+            
+            # Validate overview responses too
+            if validate_output:
+                metrics = self.output_validator.validate(
+                    query=query,
+                    response=overview_response,
+                    context="",  # No context for overview responses
+                    sources=[]
+                )
+                result['validation_metrics'] = metrics.to_dict()
+            
+            return result
         
         # Check for casual queries
         if self._is_casual_query(query):
             casual_response = self._get_casual_response(query)
             if casual_response:
+                processing_time = int((time.time() - start_time) * 1000)
+                # Skip validation for casual queries - no quality score needed
                 return {
                     'response': casual_response,
                     'sources': [],
                     'retrieved_chunks': 0,
                     'used_context': False,
                     'is_casual': True,
-                    'processing_time_ms': int((time.time() - start_time) * 1000)
+                    'processing_time_ms': processing_time
                 }
         
         # Retrieve relevant chunks
@@ -386,7 +429,7 @@ Remember: You represent IPN's technical team. Be helpful, accurate, and professi
         
         processing_time = int((time.time() - start_time) * 1000)
         
-        return {
+        result = {
             'response': answer,
             'sources': sources,
             'retrieved_chunks': len(chunks),
@@ -394,6 +437,27 @@ Remember: You represent IPN's technical team. Be helpful, accurate, and professi
             'is_casual': False,
             'processing_time_ms': processing_time
         }
+        
+        # Validate output quality
+        if validate_output:
+            try:
+                metrics = self.output_validator.validate(
+                    query=query,
+                    response=answer,
+                    context=context,
+                    sources=sources
+                )
+                result['validation_metrics'] = metrics.to_dict()
+                
+                # Log if quality is poor
+                if not metrics.is_valid():
+                    logger.warning(
+                        f"Low quality response detected: {metrics.to_dict()}"
+                    )
+            except Exception as e:
+                logger.error(f"Validation error: {e}")
+        
+        return result
     
     def stream_response(
         self, 
@@ -447,6 +511,13 @@ Remember: You represent IPN's technical team. Be helpful, accurate, and professi
     
     def get_stats(self) -> Dict[str, Any]:
         """Get system statistics"""
+        # Get document analyzer stats
+        try:
+            doc_stats = self.doc_analyzer.get_quick_stats()
+        except Exception as e:
+            logger.error(f"Error getting doc stats: {e}")
+            doc_stats = {}
+        
         return {
             'vector_store': {
                 'indexed_chunks': self.get_document_count(),
@@ -454,6 +525,7 @@ Remember: You represent IPN's technical team. Be helpful, accurate, and professi
                 'chunk_size': self.chunk_size,
                 'chunk_overlap': self.chunk_overlap
             },
+            'codebase': doc_stats,
             'configuration': {
                 'similarity_threshold': self.similarity_threshold,
                 'llm_model': self.llm.model_name,
