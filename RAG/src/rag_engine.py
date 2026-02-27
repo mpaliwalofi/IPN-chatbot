@@ -129,17 +129,44 @@ CONVERSATION STYLE:
 
 Remember: You represent IPN's technical team. Be helpful, accurate, and professional."""
 
-        # Casual conversation responses
+        # Casual conversation responses - NO validation scores for these
         self.casual_responses = {
-            r'^(hi+|hey+|hello+)': "Hello! 👋 I'm SIA, your IPN documentation assistant. How can I help you today?",
+            # Greetings
+            r'^(hi+|hey+|hello+|yo|hiya)': "Hello! 👋 I'm SIA, your IPN documentation assistant. How can I help you today?",
             r'^how are (you|u)': "I'm doing great, thanks for asking! Ready to help you navigate the IPN documentation. What would you like to know?",
             r'^(good\s)?morning': "Good morning! ☀️ Ready to help with any IPN documentation questions.",
-            r'^(good\s)?afternoon': "Good afternoon! How can I assist with the IPN docs today?",
-            r'^(good\s)?evening': "Good evening! 🌙 What can I help you find in the documentation?",
-            r'^(thanks?|thank you|thx)': "You're welcome! 😊 Happy to help. Let me know if you have more questions!",
+            r'^(good\s)?afternoon': "Good afternoon! Ready to help with any IPN documentation questions.",
+            r'^(good\s)?evening': "Good evening! 🌙 Ready to help with any IPN documentation questions.",
+            r'^(good\s)?night': "Good night! Feel free to return anytime you need help with IPN docs.",
+            
+            # Thanks
+            r'^(thanks?|thank you|thx|ty|appreciate)': "You're welcome! 😊 Happy to help. Let me know if you have more questions!",
+            
+            # Goodbyes
+            r'^(bye|goodbye|see you|later|cya|take care)': "Goodbye! Feel free to come back anytime you need help with IPN docs! 👋",
+            
+            # Acknowledgments
+            r'^(ok|okay|sure|got it|alright|cool|great|nice|awesome|wow|perfect)': "😊",
+            
+            # Help requests
             r'^help': "I can help you with:\n\n• **Backend (PHP/Symfony)**: API endpoints, entities, services\n• **Frontend (Vue.js/Nuxt)**: Components, composables, stores\n• **CMS (Strapi)**: Content models, configurations\n• **General**: Architecture, data flow, best practices\n\nWhat would you like to explore?",
+            r'^(can|could) you help': "I'd be happy to help! What do you need assistance with regarding the IPN codebase?",
+            r'^please help': "Of course! What would you like help with?",
+            
+            # Identity questions
+            r'^who are you': "I'm **SIA** (Smart IPN Assistant)! 🤖\n\nI have access to 4,500+ documentation files covering:\n• Backend PHP/Symfony API Platform\n• Frontend Vue.js/Nuxt e-commerce\n• Strapi CMS configuration\n\nI can answer technical questions, find code examples, and help you understand the IPN architecture.",
+            r"^(what is|what's) your name": "I'm **SIA** (Smart IPN Assistant)! 🤖",
             r'^what can you do': "I'm your IPN documentation expert! I can help you:\n\n🔍 **Search documentation** for specific files or concepts\n💻 **Explain code** - backend PHP or frontend Vue.js\n🏗️ **Understand architecture** and how components connect\n🐛 **Troubleshoot** by finding relevant implementation details\n\nJust ask me anything about the IPN codebase!",
-            r'^who are you': "I'm **SIA** (Smart IPN Assistant)! 🤖\n\nI have access to 4,500+ documentation files covering:\n• Backend PHP/Symfony API Platform\n• Frontend Vue.js/Nuxt e-commerce\n• Strapi CMS configuration\n\nI can answer technical questions, find code examples, and help you understand the IPN architecture."
+            
+            # Personal/introduction statements
+            r'^(my name is|i am|i\'m|call me)': "Nice to meet you! I'm here to help with any IPN documentation questions. What would you like to know?",
+            r'^i (just|want to) (wanted to |)say (hi|hello|hey)': "Hello! 👋 Nice to meet you! How can I help you today?",
+            
+            # General small talk
+            r'^what(s up| up|s going on)': "Not much! Just here and ready to help you with IPN documentation. What can I do for you?",
+            r'^how (is it going|do you do)': "I'm doing well, thanks! Ready to help with any technical questions about IPN. What would you like to explore?",
+            r'^nice to meet you': "Nice to meet you too! 👋 I'm here to help with any IPN documentation questions.",
+            r'^good (job|work|response)': "Thank you! 😊 I'm glad I could help!",
         }
         
         logger.info(f"RAG Engine initialized with model: {llm_model}")
